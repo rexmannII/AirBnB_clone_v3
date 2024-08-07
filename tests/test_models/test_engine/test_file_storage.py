@@ -70,92 +70,93 @@ test_file_storage.py'])
 
 class TestFileStorage(unittest.TestCase):
     """Test the FileStorage class"""
-    @unittest.skipIf(models.storage_t == 'db', "not testing file storage")
-    def test_all_returns_dict(self):
-        """Test that all returns the FileStorage.__objects attr"""
-        storage = FileStorage()
-        new_dict = storage.all()
-        self.assertEqual(type(new_dict), dict)
-        self.assertIs(new_dict, storage._FileStorage__objects)
+@unittest.skipIf(models.storage_t == 'db', "not testing file storage")
+def test_all_returns_dict(self):
+    """Test that all returns the FileStorage.__objects attr"""
+    storage = FileStorage()
+    new_dict = storage.all()
+    self.assertEqual(type(new_dict), dict)
+    self.assertIs(new_dict, storage._FileStorage__objects)
 
-    @unittest.skipIf(models.storage_t == 'db', "not testing file storage")
-    def test_new(self):
-        """test that new adds an object to the FileStorage.__objects attr"""
-        storage = FileStorage()
-        save = FileStorage._FileStorage__objects
-        FileStorage._FileStorage__objects = {}
-        test_dict = {}
-        for key, value in classes.items():
-            with self.subTest(key=key, value=value):
-                instance = value()
-                instance_key = instance.__class__.__name__ + "." + instance.id
-                storage.new(instance)
-                test_dict[instance_key] = instance
-                self.assertEqual(test_dict, storage._FileStorage__objects)
-        FileStorage._FileStorage__objects = save
-
-    @unittest.skipIf(models.storage_t == 'db', "not testing file storage")
-    def test_save(self):
-        """Test that save properly saves objects to file.json"""
-        storage = FileStorage()
-        new_dict = {}
-        for key, value in classes.items():
+@unittest.skipIf(models.storage_t == 'db', "not testing file storage")
+def test_new(self):
+    """test that new adds an object to the FileStorage.__objects attr"""
+    storage = FileStorage()
+    save = FileStorage._FileStorage__objects
+    FileStorage._FileStorage__objects = {}
+    test_dict = {}
+    for key, value in classes.items():
+        with self.subTest(key=key, value=value):
             instance = value()
             instance_key = instance.__class__.__name__ + "." + instance.id
-            new_dict[instance_key] = instance
-        save = FileStorage._FileStorage__objects
-        FileStorage._FileStorage__objects = new_dict
-        storage.save()
+            storage.new(instance)
+            test_dict[instance_key] = instance
+            self.assertEqual(test_dict, storage._FileStorage__objects)
         FileStorage._FileStorage__objects = save
-        for key, value in new_dict.items():
-            new_dict[key] = value.to_dict()
-        string = json.dumps(new_dict)
-        with open("file.json", "r") as f:
-            js = f.read()
-            self.assertEqual(json.loads(string), json.loads(js))
 
-     @unittest.skipIf(models.storage_t != 'db', "not testing db storage")
-     def test_get(self):
-         """Tests method for detaining an instance db storage"""
-         storage = FileStorage
+@unittest.skipIf(models.storage_t == 'db', "not testing file storage")
+def test_save(self):
+    """Test that save properly saves objects to file.json"""
+    storage = FileStorage()
+    new_dict = {}
+    for key, value in classes.items():
+        instance = value()
+        instance_key = instance.__class__.__name__ + "." + instance.id
+        new_dict[instance_key] = instance
+    save = FileStorage._FileStorage__objects
+    FileStorage._FileStorage__objects = new_dict
+    storage.save()
+    FileStorage._FileStorage__objects = save
+    for key, value in new_dict.items():
+        new_dict[key] = value.to_dict()
+    string = json.dumps(new_dict)
+    with open("file.json", "r") as f:
+        js = f.read()
+        self.assertEqual(json.loads(string), json.loads(js))
 
-         storage.reload()
+@unittest.skipIf(models.storage_t != 'db', "not testing db storage")
+def test_get(self):
+    """Tests method for detaining an instance db storage"""
+    storage = FileStorage
 
-         state_data = {"name": "Enugu"}
+    storage.reload()
 
-         state_instance = State(**state_data)
-         storage.new(state_instance)
-         storage.save()
+    state_data = {"name": "Enugu"}
 
-         retrieved_state = storage.get(State, state_instance.id)
+    state_instance = State(**state_data)
+    storage.new(state_instance)
+    storage.save()
 
-         self.assertEqual(state_instance, retrieved_state)
+    retrieved_state = storage.get(State, state_instance.id)
 
-         fake_state_id = storage.get(State, 'fake_id')
+    self.assertEqual(state_instance, retrieved_state)
 
-         self.assertEqual(fake_state_id, None)
+    fake_state_id = storage.get(State, 'fake_id')
+
+    self.assertEqual(fake_state_id, None)
 
 
-      @unittest.skipIf(models.storage_t != 'db', "not testing db storage")
-      def test_count(self):
-          """Tests method for obtaining an instance db storage."""
-          storage = FileStorage
-          storage.reload()
-          state_data = {"name": "Abia"}
-          state_instance = State(**state_data)
-          storage.new(state_instance)
+@unittest.skipIf(models.storage_t != 'db', "not testing db storage")
 
-          city_data = {"name": "Rocky", "state_id": state_instance.id}
 
-          city_instance = City(**city_data)
+def test_count(self):
+    """Tests method for obtaining an instance db storage."""
+    storage = FileStorage
+    storage.reload()
+    state_data = {"name": "Abia"}
+    state_instance = State(**state_data)
+    storage.new(state_instance)
 
-          storage.new(city_instance)
+    city_data = {"name": "Rocky", "state_id": state_instance.id}
 
-          storage.save()
+    city_instance = City(**city_data)
 
-          state_occurrence = storage.count(State)
-          self.assertEqual(state_occurrence, len(storage.all(State)))
+    storage.new(city_instance)
 
-          all_occurrence = storage.count()
-          self.assertEqual(all_occurrence, len(storage.all()))
+    storage.save()
 
+    state_occurrence = storage.count(State)
+    self.assertEqual(state_occurrence, len(storage.all(State)))
+
+    all_occurrence = storage.count()
+    self.assertEqual(all_occurrence, len(storage.all()))
